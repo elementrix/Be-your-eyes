@@ -96,14 +96,15 @@ public class MainActivity extends AppCompatActivity {
 
             showPairedDevicesListDialog();
         }
+
         final LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         final LocationListener mLocationListener = new LocationListener() {
             int nodeCurrent = 0; // 알려주어야 할 노드가 무엇인지 알아봐야 하므로 알려주면 하나씩 증가
             public void onLocationChanged(Location location) {
-
                 Log.d("test", "onLocationChanged, location:" + location);
                 double longitude = location.getLongitude(); //경도
                 double latitude = location.getLatitude();   //위도
+                lm.removeUpdates(this);
             }
             public void onProviderDisabled(String provider) {
                 // Disabled시
