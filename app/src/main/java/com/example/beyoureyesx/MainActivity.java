@@ -3,6 +3,7 @@ package com.example.beyoureyesx;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 
@@ -59,6 +60,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 public class MainActivity extends AppCompatActivity {
+    TextToSpeech tts;
     //블루투스
     private final int REQUEST_BLUETOOTH_ENABLE = 100;
 
@@ -185,31 +187,39 @@ public class MainActivity extends AppCompatActivity {
                 //블루투스
                 Geocoder geo = new Geocoder(MainActivity.this);
                 try{
-
-                    List<Address> spLocation = geo.getFromLocationName(txtSP.getText().toString(),1);
+                    //List<Address> spLocation = geo.getFromLocationName(txtSP.getText().toString(),1);
                     double spLat = location.getLatitude();// spLocation.get(0).getLatitude();
                     double spLng = location.getLongitude();//spLocation.get(0).getLongitude();
                     //toast(Double.toString(spLat)+Double.toString(spLng));
 
                     List<Address> epLocation = geo.getFromLocationName(txtEP.getText().toString(),1);
-                    double epLat = epLocation.get(0).getLatitude();
-                    double epLng = epLocation.get(0).getLongitude();
                     //toast(Double.toString(epLat)+Double.toString(epLng));
+                    //toast("주소변환값"+":"+spLat);
+                    if(epLocation.size()>0) {
+                        double epLat = epLocation.get(0).getLatitude();
+                        double epLng = epLocation.get(0).getLongitude();
 
-                    toast("주소변환값"+":"+spLat);
+                        Intent intent = new Intent(getApplicationContext(), RoadActivity.class);
+                        intent.putExtra("spLat", spLat);
+                        intent.putExtra("spLng", spLng);
+                        intent.putExtra("epLat", epLat);
+                        intent.putExtra("epLng", epLng);
 
-                    Intent intent = new Intent(getApplicationContext(), RoadActivity.class);
-                    intent.putExtra("spLat",spLat);
-                    intent.putExtra("spLng",spLng);
-                    intent.putExtra("epLat",epLat);
-                    intent.putExtra("epLng",epLng);
-
-                    startActivity(intent);
-
+                        startActivity(intent);
+                    }else{
+                        tts.speak("주소변환에 실패했어요. 다시시도해 주세요", TextToSpeech.QUEUE_FLUSH, null);
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
-                    toast("주소변환실패");
                 }
+            }
+        });
+        tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                tts.setPitch(1.0f); //1.5톤 올려서
+                tts.setSpeechRate(1.2f); //1배속으로 읽기
+                tts.setLanguage(Locale.KOREAN);
             }
         });
     }
@@ -219,6 +229,11 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         if ( mConnectedTask != null ) {
             mConnectedTask.cancel(true);
+        }
+        if(tts != null){
+            tts.stop();
+            tts.shutdown();
+            tts = null;
         }
     }
 
@@ -293,28 +308,23 @@ public class MainActivity extends AppCompatActivity {
         mConnectedTask.execute();
     }
 
-
-
     private class ConnectedTask extends AsyncTask<Void, String, Boolean> {
-
         private InputStream mInputStream = null;
         private OutputStream mOutputStream = null;
         private BluetoothSocket mBluetoothSocket = null;
-
         ConnectedTask(BluetoothSocket socket){
 
             mBluetoothSocket = socket;
+
             try {
                 mInputStream = mBluetoothSocket.getInputStream();
                 mOutputStream = mBluetoothSocket.getOutputStream();
             } catch (IOException e) {
                 Log.e(TAG, "socket not created", e );
             }
-
             Log.d( TAG, "connected to "+mConnectedDeviceName);
             toast("connected to "+mConnectedDeviceName);
         }
-
 
         @Override
         protected Boolean doInBackground(Void... params) {
@@ -322,24 +332,15 @@ public class MainActivity extends AppCompatActivity {
             byte [] readBuffer = new byte[1024];
             int readBufferPosition = 0;
 
-
             while (true) {
-
                 if ( isCancelled() ) return false;
-
                 try {
-
                     int bytesAvailable = mInputStream.available();
-
                     if(bytesAvailable > 0) {
                         Log.d(TAG, "bytesAvailable: " +bytesAvailable );
-
                         byte[] packetBytes = new byte[bytesAvailable];
-
                         mInputStream.read(packetBytes);
-
                         for(int i=0;i<bytesAvailable;i++) {
-
                             byte b = packetBytes[i];
                             if(b== '\n')
                             {
@@ -362,21 +363,16 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                 } catch (IOException e) {
-
                     Log.e(TAG, "disconnected", e);
                     return false;
                 }
             }
-
         }
 
         @Override
         protected void onPostExecute(Boolean isSucess) {
             super.onPostExecute(isSucess);
-
             if ( !isSucess ) {
-
-
                 closeSocket();
                 Log.d(TAG, "Device connection was lost");
                 isConnectionError = true;
@@ -387,35 +383,27 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onCancelled(Boolean aBoolean) {
             super.onCancelled(aBoolean);
-
             closeSocket();
         }
 
         void closeSocket(){
-
             try {
-
                 mBluetoothSocket.close();
                 Log.d(TAG, "close socket()");
-
             } catch (IOException e2) {
-
                 Log.e(TAG, "unable to close() " +
                         " socket during connection failure", e2);
             }
         }
 
         void write(String msg){
-
             msg += "\n";
-
             try {
                 mOutputStream.write(msg.getBytes());
                 mOutputStream.flush();
             } catch (IOException e) {
                 Log.e(TAG, "Exception during send", e );
             }
-
         }
     }
 
@@ -452,8 +440,6 @@ public class MainActivity extends AppCompatActivity {
         builder.create().show();
     }
 
-
-
     public void showErrorDialog(String message)
     {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -472,7 +458,6 @@ public class MainActivity extends AppCompatActivity {
         });
         builder.create().show();
     }
-
 
     public void showQuitDialog(String message)
     {
@@ -497,7 +482,6 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, "send message: " + msg);
         }
     }
-
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
