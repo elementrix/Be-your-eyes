@@ -109,13 +109,24 @@ public class RoadActivity extends AppCompatActivity {
                     tts.speak("안녕하세요 이제부터 안내를 시작할게요."+path.get(nodeCurrent)+"하세요.",TextToSpeech.QUEUE_FLUSH,null);
                     nodeCurrent++;
                     Log.d("debug","nodeCurrent: "+nodeCurrent);
-                }
-                Log.d("debug","경도오차"+Double.toString(path_coor.get(2*nodeCurrent)-longitude)+"// 위도오차"+Double.toString(path_coor.get(2*nodeCurrent+1)-latitude));
-                if ((path_coor.get(2*nodeCurrent)>longitude-0.00008)&&(path_coor.get(2*nodeCurrent)<longitude+0.00008)&&((path_coor.get(2*nodeCurrent+1)>latitude-0.0017)&&(path_coor.get(2*nodeCurrent+1)<latitude+0.0017))){
-                    tts.speak(path.get(nodeCurrent)+"하세요.",TextToSpeech.QUEUE_FLUSH,null);
-                    Log.d("debug","Got it!");
-                    Log.d("debug","nodeCurrent: "+nodeCurrent);
-                    nodeCurrent++;
+                }else if (nodeCurrent != path_coor.size()) {
+                    Log.d("debug", "경도오차" + Double.toString(path_coor.get(2 * nodeCurrent) - longitude) + "// 위도오차" + Double.toString(path_coor.get(2 * nodeCurrent + 1) - latitude));
+                    if ((path_coor.get(2 * nodeCurrent) > longitude - 0.00008) && (path_coor.get(2 * nodeCurrent) < longitude + 0.00008) && ((path_coor.get(2 * nodeCurrent + 1) > latitude - 0.0017) && (path_coor.get(2 * nodeCurrent + 1) < latitude + 0.0017))) {
+                        tts.speak(path.get(nodeCurrent) + "하세요.", TextToSpeech.QUEUE_FLUSH, null);
+                        Log.d("debug", "Got it!");
+                        Log.d("debug", "nodeCurrent: " + nodeCurrent);
+                        nodeCurrent++;
+                    }
+                }else if (nodeCurrent == path_coor.size()){
+                    if ((path_coor.get(2 * nodeCurrent) > longitude - 0.00008) && (path_coor.get(2 * nodeCurrent) < longitude + 0.00008) && ((path_coor.get(2 * nodeCurrent + 1) > latitude - 0.0017) && (path_coor.get(2 * nodeCurrent + 1) < latitude + 0.0017))) {
+                        tts.speak(path.get(nodeCurrent) + "하셨어요.", TextToSpeech.QUEUE_FLUSH, null);
+                        Log.d("debug", "Got it!");
+                        Log.d("debug", "nodeCurrent: " + nodeCurrent);
+                        nodeCurrent++;
+                    }
+                }else if(nodeCurrent+1 == path_coor.size()){
+                    Log.d("debug", "Turn off listener");
+                    lm.removeUpdates(this);
                 }
             }
             public void onProviderDisabled(String provider) {
