@@ -112,23 +112,24 @@ public class RoadActivity extends AppCompatActivity {
                         tts.speak("안녕하세요 이제부터 안내를 시작할게요."+path.get(nodeCurrent)+"하세요.",TextToSpeech.QUEUE_FLUSH,null);
                         nodeCurrent++;
                         Log.d("debug","nodeCurrent: "+nodeCurrent);
-                    }else if (nodeCurrent != path_coor.size()) {
+                        Log.d("debug",Integer.toString(path_coor.size()));
+                    }else if (2*nodeCurrent != path_coor.size()) {
                         Log.d("debug", "경도오차" + Double.toString(path_coor.get(2 * nodeCurrent) - longitude) + "// 위도오차" + Double.toString(path_coor.get(2 * nodeCurrent + 1) - latitude));
-                        if ((path_coor.get(2 * nodeCurrent) > longitude - 0.00007) && (path_coor.get(2 * nodeCurrent) < longitude + 0.00007) && ((path_coor.get(2 * nodeCurrent + 1) > latitude - 0.0017) && (path_coor.get(2 * nodeCurrent + 1) < latitude + 0.0017))) {
+                        if ((path_coor.get(2 * nodeCurrent) > longitude - 0.00007) && (path_coor.get(2 * nodeCurrent) < longitude + 0.00007) && ((path_coor.get(2 * nodeCurrent + 1) > latitude - 0.00007) && (path_coor.get(2 * nodeCurrent + 1) < latitude + 0.00007))) {
                             tts.speak(path.get(nodeCurrent) + "하세요.", TextToSpeech.QUEUE_FLUSH, null);
                             Log.d("debug", "Got it!");
                             Log.d("debug", "nodeCurrent: " + nodeCurrent);
                             nodeCurrent++;
                         }
-                    }else if (nodeCurrent == path_coor.size()){
-                        if ((path_coor.get(2 * nodeCurrent) > longitude - 0.00008) && (path_coor.get(2 * nodeCurrent) < longitude + 0.00008) && ((path_coor.get(2 * nodeCurrent + 1) > latitude - 0.0017) && (path_coor.get(2 * nodeCurrent + 1) < latitude + 0.0017))) {
+                    }else if (2*nodeCurrent == path_coor.size()){
+                        if ((path_coor.get(2 * nodeCurrent) > longitude - 0.00008) && (path_coor.get(2 * nodeCurrent) < longitude + 0.00008) && ((path_coor.get(2 * nodeCurrent + 1) > latitude - 0.00007) && (path_coor.get(2 * nodeCurrent + 1) < latitude + 0.00007))) {
                             tts.speak(path.get(nodeCurrent) + "하셨어요.", TextToSpeech.QUEUE_FLUSH, null);
                             Log.d("debug", "Got it!");
                             Log.d("debug", "nodeCurrent: " + nodeCurrent);
                             toast("Finished");
                             nodeCurrent++;
                         }
-                    }else if(nodeCurrent-1 == path_coor.size()){
+                    }else if(2*nodeCurrent > path_coor.size()){
                         toast("Turn off listener");
                         lm.removeUpdates(this);
                     }
@@ -152,8 +153,8 @@ public class RoadActivity extends AppCompatActivity {
 
         try {
             if (isOnTrack) {
-                lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 100, 1, mLocationListener);
-                lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 100, 1, mLocationListener);
+                lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 50, 1, mLocationListener);
+                lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 50, 1, mLocationListener);
 
             } else {
                 lm.removeUpdates(mLocationListener);  //  미수신할때는 반드시 자원해체를 해주어야 한다.

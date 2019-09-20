@@ -353,6 +353,15 @@ public class MainActivity extends AppCompatActivity {
                                 readBufferPosition = 0;
 
                                 Log.d(TAG, "recv message: " + recvMessage);
+                                tts.setPitch(2.0f); //1.5톤 올려서
+                                tts.setSpeechRate(2.0f); //1배속으로 읽기
+                                if(recvMessage.equals("bicycle")) {
+                                    tts.speak("자전거온다왼쪽으로피해!!", TextToSpeech.QUEUE_FLUSH, null);
+                                }else if (recvMessage.equals("truck")){
+                                    tts.speak("트럭온다엎드려!!", TextToSpeech.QUEUE_FLUSH, null);
+                                }
+                                tts.setPitch(1.5f); //1.5톤 올려서
+                                tts.setSpeechRate(1.0f); //1배속으로 읽기
                                 publishProgress(recvMessage);
                             }
                             else
