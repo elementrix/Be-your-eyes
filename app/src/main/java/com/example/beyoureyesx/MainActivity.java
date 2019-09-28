@@ -7,6 +7,17 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 
+import android.widget.ArrayAdapter;
+import android.widget.EditText;
+import android.widget.ListView;
+import androidx.appcompat.app.AppCompatActivity;
+import android.net.Uri;
+import android.os.Bundle;
+import android.widget.TextView;
+//음성인식에 필요한 import 문
+import android.content.Intent;
+import java.io.IOException;
+
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
@@ -15,6 +26,7 @@ import android.content.Intent;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import androidx.appcompat.app.AlertDialog;
@@ -23,36 +35,21 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ListView;
 import android.widget.TextView;
-
-import androidx.appcompat.app.AppCompatActivity;
 
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
-import android.net.Uri;
-import android.os.Bundle;
 
 import android.speech.RecognitionListener;
 import android.speech.SpeechRecognizer;
-
-import android.view.View;
-//버튼 및 텍스트 뷰 정의에 필요한 import 문
-import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.TextView;
-//음성인식에 필요한 import 문
-import android.content.Intent;
 import android.speech.RecognizerIntent;
 import android.widget.Toast;
 //음성인식 결과 출력에 필요한 import 문
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 //음성인식 및 인터넷 권한습득을 위한 import문
@@ -60,27 +57,104 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 public class MainActivity extends AppCompatActivity {
-    TextToSpeech tts;
+
     //블루투스
     private final int REQUEST_BLUETOOTH_ENABLE = 100;
+    private final int REQUEST_CONTACT_ENABLE = 10001;
 
     ConnectedTask mConnectedTask = null;
     static BluetoothAdapter mBluetoothAdapter;
     private String mConnectedDeviceName = null;
     static boolean isConnectionError = false;
     private static final String TAG = "BluetoothClient";
-
     //블루투스
+    public static final String SELECTED_PHONE = "selectedphone";
+    public static final int SUCCESS = 1;
+    public static final int FAIL = -1;
+
+    String tel;
+    TextToSpeech tts;
+
+    //음성입력 함수
+    public void inputVoice(final TextView txt){
+        try{
+            Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+            intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, this.getPackageName());
+            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE,"ko-KR");
+
+            final SpeechRecognizer stt = SpeechRecognizer.createSpeechRecognizer(this);
+            stt.startListening(intent);
+            stt.setRecognitionListener(new RecognitionListener(){
+                @Override
+                public void onReadyForSpeech(Bundle bundle) {
+                    //toast("음성입력을 시작합니다");
+                }
+
+                @Override
+                public void onBeginningOfSpeech() {
+
+                }
+
+                @Override
+                public void onRmsChanged(float v) {
+
+                }
+
+                @Override
+                public void onBufferReceived(byte[] bytes) {
+
+                }
+
+                @Override
+                public void onEndOfSpeech() {
+                    //toast("음성입력이 끝났습니다");
+                }
+
+                @Override
+                public void onError(int error) {
+                    toast("오류발생: " + error);
+                }
+
+                @Override
+                public void onResults(Bundle results) {
+                    //toast("하이");
+                    ArrayList<String> result = (ArrayList<String>) results.get(SpeechRecognizer.RESULTS_RECOGNITION);
+                    //toast(result.get(0));
+                    txt.setText(result.get(0));
+                    stt.destroy();
+                }
+
+                @Override
+                public void onPartialResults(Bundle bundle) {
+
+                }
+
+                @Override
+                public void onEvent(int i, Bundle bundle) {
+
+                }
+            });
+        } catch (Exception e) {
+            toast(e.toString());
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         boolean isOnTrack = true;
-        if(ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED){
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO},5);
-            toast("마이크 권한");
+        if((ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED)
+                &&(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED)
+                &&(ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED)
+                &&(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+                &&(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)){
+
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO,Manifest.permission.READ_CONTACTS,Manifest.permission.CALL_PHONE,
+                    Manifest.permission.ACCESS_COARSE_LOCATION,Manifest.permission.ACCESS_FINE_LOCATION},5);
+            toast("권한모두 줌");
         }
+
         setContentView(R.layout.activity_main);
 
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -98,6 +172,24 @@ public class MainActivity extends AppCompatActivity {
 
             showPairedDevicesListDialog();
         }
+
+
+        findViewById(R.id.bt_get_contact).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showContactlist();
+            }
+        });
+
+
+        tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                tts.setPitch(1.0f); //1.5톤 올려서
+                tts.setSpeechRate(1.2f); //1배속으로 읽기
+                tts.setLanguage(Locale.KOREAN);
+            }
+        });
 
         final LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         final LocationListener mLocationListener = new LocationListener() {
@@ -136,38 +228,16 @@ public class MainActivity extends AppCompatActivity {
         }
         String locationProvider = LocationManager.NETWORK_PROVIDER;
 
-        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    Activity#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for Activity#requestPermissions for more details.
-            return;
-        }
         final Location location = lm.getLastKnownLocation(locationProvider);
 
         //버튼 및 음성입력 결과 값이 들어가는 텍스트뷰 정의
-        ImageButton btnSP =  findViewById(R.id.SP);
+
         ImageButton btnEP =  findViewById(R.id.EP);
-        Button btnCOM =  (Button) findViewById(R.id.complete);
+        Button btnCOM = findViewById(R.id.complete);
 
-        final TextView txtSP = (TextView) findViewById(R.id.txtSP);
-        final TextView txtEP = (TextView) findViewById(R.id.txtEP);
+        final TextView txtEP = findViewById(R.id.txtEP);
 
-        // 텍스트 사이즈 정의
-        txtSP.setTextSize(18);
         txtEP.setTextSize(18);
-
-        btnSP.setOnClickListener(new Button.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                //시작지점 버튼 클릭시 음성입력 함수
-                inputVoice(txtSP);
-                //toast(txtSP.getText().toString());
-            }
-        });
 
         btnEP.setOnClickListener(new Button.OnClickListener() {
             @Override
@@ -212,14 +282,6 @@ public class MainActivity extends AppCompatActivity {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            }
-        });
-        tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
-            @Override
-            public void onInit(int status) {
-                tts.setPitch(1.0f); //1.5톤 올려서
-                tts.setSpeechRate(1.2f); //1배속으로 읽기
-                tts.setLanguage(Locale.KOREAN);
             }
         });
     }
@@ -289,12 +351,14 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(Boolean isSucess) {
-
+            final TextView txtEP = (TextView) findViewById(R.id.txtEP);
             if ( isSucess ) {
                 connected(mBluetoothSocket);
+                tts.speak("도착지를 말씀해주세요!", TextToSpeech.QUEUE_FLUSH, null);
+                inputVoice(txtEP);
             }
             else{
-
+                tts.speak("블루투스 연결에 실패했어요. 다시 시도해주세요.", TextToSpeech.QUEUE_FLUSH, null,null);
                 isConnectionError = true;
                 Log.d( TAG,  "Unable to connect device");
                 showErrorDialog("Unable to connect device");
@@ -359,6 +423,8 @@ public class MainActivity extends AppCompatActivity {
                                     tts.speak("자전거온다왼쪽으로피해!!", TextToSpeech.QUEUE_FLUSH, null);
                                 }else if (recvMessage.equals("truck")){
                                     tts.speak("트럭온다엎드려!!", TextToSpeech.QUEUE_FLUSH, null);
+                                }else if (recvMessage.equals("emergency")){
+                                    startActivity(new Intent("android.intent.action.CALL", Uri.parse(tel)));
                                 }
                                 tts.setPitch(1.5f); //1.5톤 올려서
                                 tts.setSpeechRate(1.0f); //1배속으로 읽기
@@ -494,7 +560,6 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-
         if(requestCode == REQUEST_BLUETOOTH_ENABLE){
             if (resultCode == RESULT_OK){
                 //BlueTooth is now Enabled
@@ -504,71 +569,26 @@ public class MainActivity extends AppCompatActivity {
                 showQuitDialog( "You need to enable bluetooth");
             }
         }
-    }
-
-    //음성입력 함수
-   public void inputVoice(final TextView txt){
-        try{
-            Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-            intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, this.getPackageName());
-            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE,"ko-KR");
-
-            final SpeechRecognizer stt = SpeechRecognizer.createSpeechRecognizer(this);
-            stt.startListening(intent);
-            stt.setRecognitionListener(new RecognitionListener(){
-                @Override
-                public void onReadyForSpeech(Bundle bundle) {
-                    //toast("음성입력을 시작합니다");
-                }
-
-                @Override
-                public void onBeginningOfSpeech() {
-
-                }
-
-                @Override
-                public void onRmsChanged(float v) {
-
-                }
-
-                @Override
-                public void onBufferReceived(byte[] bytes) {
-
-                }
-
-                @Override
-                public void onEndOfSpeech() {
-                    //toast("음성입력이 끝났습니다");
-                }
-
-                @Override
-                public void onError(int error) {
-                    toast("오류발생: " + error);
-                }
-
-                @Override
-                public void onResults(Bundle results) {
-                    //toast("하이");
-                    ArrayList<String> result = (ArrayList<String>) results.get(SpeechRecognizer.RESULTS_RECOGNITION);
-                    //toast(result.get(0));
-                    txt.setText(result.get(0));
-                    stt.destroy();
-                }
-
-                @Override
-                public void onPartialResults(Bundle bundle) {
-
-                }
-
-                @Override
-                public void onEvent(int i, Bundle bundle) {
-
-                }
-            });
-        } catch (Exception e) {
-            toast(e.toString());
+        if (requestCode == REQUEST_CONTACT_ENABLE) {
+            if (resultCode == SUCCESS) {
+                tel="tel:"+data.getExtras().getString("returnPhone");
+                toast("You've got right to read contact : "+tel);
+                startActivity(new Intent("android.intent.action.CALL", Uri.parse(tel)));
+            } else {
+                toast("You need right to read contact");
+            }
         }
     }
+
+    private void showContactlist() {
+        Intent intent = new Intent(MainActivity.this,
+                ContactListActivity.class)
+                .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
+                        | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+        startActivityForResult(intent, REQUEST_CONTACT_ENABLE);
+    }
+
     private void toast(String msg){
         Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
     }
