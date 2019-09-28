@@ -7,6 +7,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 
+import android.graphics.Color;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -53,6 +54,7 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
 //음성인식 및 인터넷 권한습득을 위한 import문
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
@@ -156,6 +158,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
         setContentView(R.layout.activity_main);
+        ConstraintLayout mlayout = findViewById(R.id.background);
+        mlayout.setBackgroundColor(Color.rgb(255,242,204));
+        getWindow().setStatusBarColor(Color.rgb(242,158,62));
 
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mBluetoothAdapter == null) {
@@ -277,7 +282,7 @@ public class MainActivity extends AppCompatActivity {
 
                         startActivity(intent);
                     }else{
-                        tts.speak("주소변환에 실패했어요. 다시시도해 주세요", TextToSpeech.QUEUE_FLUSH, null);
+                        tts.speak("주소변환에 실패했어요. 다시시도해 주세요", TextToSpeech.QUEUE_FLUSH, null,null);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -341,27 +346,24 @@ public class MainActivity extends AppCompatActivity {
                     Log.e(TAG, "unable to close() " +
                             " socket during connection failure", e2);
                 }
-
                 return false;
             }
-
             return true;
         }
-
 
         @Override
         protected void onPostExecute(Boolean isSucess) {
             final TextView txtEP = (TextView) findViewById(R.id.txtEP);
             if ( isSucess ) {
                 connected(mBluetoothSocket);
-                tts.speak("도착지를 말씀해주세요!", TextToSpeech.QUEUE_FLUSH, null);
+                tts.speak("도착지를 말씀해주세요!", TextToSpeech.QUEUE_FLUSH, null,null);
                 inputVoice(txtEP);
             }
             else{
-                tts.speak("블루투스 연결에 실패했어요. 다시 시도해주세요.", TextToSpeech.QUEUE_FLUSH, null,null);
+                tts.speak("블루투스 연결에 실패했어요. 앱 종료후 다시 시도해 주세요", TextToSpeech.QUEUE_FLUSH, null,null);
                 isConnectionError = true;
                 Log.d( TAG,  "Unable to connect device");
-                showErrorDialog("Unable to connect device");
+                showErrorDialog("블루투스 연결에 실패했어요");
             }
         }
     }
@@ -387,7 +389,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.e(TAG, "socket not created", e );
             }
             Log.d( TAG, "connected to "+mConnectedDeviceName);
-            toast("connected to "+mConnectedDeviceName);
+            toast(mConnectedDeviceName+"에 연결되었습니다.");
         }
 
         @Override
@@ -419,11 +421,20 @@ public class MainActivity extends AppCompatActivity {
                                 Log.d(TAG, "recv message: " + recvMessage);
                                 tts.setPitch(2.0f); //1.5톤 올려서
                                 tts.setSpeechRate(2.0f); //1배속으로 읽기
-                                if(recvMessage.equals("bicycle")) {
-                                    tts.speak("자전거온다왼쪽으로피해!!", TextToSpeech.QUEUE_FLUSH, null);
-                                }else if (recvMessage.equals("truck")){
-                                    tts.speak("트럭온다엎드려!!", TextToSpeech.QUEUE_FLUSH, null);
+                                if(recvMessage.equals("bicycleright")) {
+                                    tts.speak("자전거가오른쪽에서와요!!", TextToSpeech.QUEUE_FLUSH, null,null);
+                                }else if (recvMessage.equals("bicycleleft")){
+                                    tts.speak("자전거가왼쪽에서와요!!", TextToSpeech.QUEUE_FLUSH, null,null);
+                                }else if (recvMessage.equals("bicyclefront")){
+                                    tts.speak("자전거가정면에서와요!!", TextToSpeech.QUEUE_FLUSH, null,null);
+                                }else if (recvMessage.equals("motorcycleright")){
+                                    tts.speak("오토바이가오른쪽에서와요!!", TextToSpeech.QUEUE_FLUSH, null,null);
+                                }else if (recvMessage.equals("motorcycleleft")){
+                                    tts.speak("오토바이가왼쪽에서와요!!", TextToSpeech.QUEUE_FLUSH, null,null);
+                                }else if (recvMessage.equals("motorcyclefront")){
+                                    tts.speak("오토바이가정면에서와요!!", TextToSpeech.QUEUE_FLUSH, null,null);
                                 }else if (recvMessage.equals("emergency")){
+                                    tts.speak("보호자에게연락할게요!!", TextToSpeech.QUEUE_FLUSH, null,null);
                                     startActivity(new Intent("android.intent.action.CALL", Uri.parse(tel)));
                                 }
                                 tts.setPitch(1.5f); //1.5톤 올려서
@@ -449,9 +460,9 @@ public class MainActivity extends AppCompatActivity {
             super.onPostExecute(isSucess);
             if ( !isSucess ) {
                 closeSocket();
-                Log.d(TAG, "Device connection was lost");
+                Log.d(TAG, "블루투스 연결이 끊겼습니다");
                 isConnectionError = true;
-                showErrorDialog("Device connection was lost");
+                showErrorDialog("블루투스 연결이 끊겼습니다");
             }
         }
 
@@ -489,8 +500,8 @@ public class MainActivity extends AppCompatActivity {
         final BluetoothDevice[] pairedDevices = devices.toArray(new BluetoothDevice[0]);
 
         if ( pairedDevices.length == 0 ){
-            showQuitDialog( "No devices have been paired.\n"
-                    +"You must pair it with another device.");
+            showQuitDialog( "어느 기기와도 연결되지 않았습니다.\n"
+                    +"한개의 기기와는 연결되어야 합니다.");
             return;
         }
 
@@ -518,10 +529,10 @@ public class MainActivity extends AppCompatActivity {
     public void showErrorDialog(String message)
     {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Quit");
+        builder.setTitle("연결실패");
         builder.setCancelable(false);
         builder.setMessage(message);
-        builder.setPositiveButton("OK",  new DialogInterface.OnClickListener() {
+        builder.setPositiveButton("확인",  new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 dialog.dismiss();
@@ -537,10 +548,10 @@ public class MainActivity extends AppCompatActivity {
     public void showQuitDialog(String message)
     {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Quit");
+        builder.setTitle("종료");
         builder.setCancelable(false);
         builder.setMessage(message);
-        builder.setPositiveButton("OK",  new DialogInterface.OnClickListener() {
+        builder.setPositiveButton("확인",  new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 dialog.dismiss();
@@ -572,10 +583,9 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == REQUEST_CONTACT_ENABLE) {
             if (resultCode == SUCCESS) {
                 tel="tel:"+data.getExtras().getString("returnPhone");
-                toast("You've got right to read contact : "+tel);
-                startActivity(new Intent("android.intent.action.CALL", Uri.parse(tel)));
+                toast("긴급연락처가 등록되었습니다: "+data.getExtras().getString("returnPhone"));
             } else {
-                toast("You need right to read contact");
+                toast("권한이 없습니다. 설정->애플리케이션->그대의 눈동자->권한에서 권한을 등록해 주세요.");
             }
         }
     }

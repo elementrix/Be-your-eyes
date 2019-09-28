@@ -40,7 +40,6 @@ public class ContactListActivity extends Activity {
     protected void onResume() {
         super.onResume();
 
-
         ContactsAdapter adapter = new ContactsAdapter(ContactListActivity.this,
                 R.layout.layout_phonelist, getContactList());
 

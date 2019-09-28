@@ -14,9 +14,9 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:icon="@mipmap/ic_launcher_beyoureyes"
+        android:label="그대의 눈동자"
+        android:roundIcon="@mipmap/ic_launcher_beyoureyes_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name=".RoadActivity"></activity>
@@ -28,6 +28,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <meta-data
+            android:name="preloaded_fonts"
+            android:resource="@array/preloaded_fonts" />
     </application>
 
 </manifest>
