@@ -434,7 +434,13 @@ public class MainActivity extends AppCompatActivity {
                                     tts.speak("오토바이가정면에서와요!!", TextToSpeech.QUEUE_FLUSH, null,null);
                                 }else if (recvMessage.equals("emergency")){
                                     tts.speak("보호자에게연락할게요!!", TextToSpeech.QUEUE_FLUSH, null,null);
-                                    startActivity(new Intent("android.intent.action.CALL", Uri.parse(tel)));
+                                    if(tel!=null){
+                                        startActivity(new Intent("android.intent.action.CALL", Uri.parse(tel)));
+                                    }else{
+                                        toast("연락할 연락처를 지정해 주세요");
+                                    }
+                                }else if (recvMessage.equals("find")){
+                                    tts.speak("저 여기 있어요오!!", TextToSpeech.QUEUE_FLUSH, null,null);
                                 }
                                 tts.setPitch(1.5f); //1.5톤 올려서
                                 tts.setSpeechRate(1.0f); //1배속으로 읽기
