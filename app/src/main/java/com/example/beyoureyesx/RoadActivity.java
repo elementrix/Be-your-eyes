@@ -30,18 +30,18 @@ import java.util.Locale;
 
 public class RoadActivity extends AppCompatActivity {
 
-    TextToSpeech tts;
+    TextToSpeech tts2;
     LocationManager lm;
     LocationListener mLocationListener;
+
+    ArrayList<String> path = new ArrayList<>();
+    ArrayList<Double> path_coor = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_road);
         boolean isOnTrack = true;
-
-        final ArrayList<String> path = new ArrayList<String>();;
-        final ArrayList<Double> path_coor = new ArrayList<Double>();
 
         Intent intent = getIntent();
         double spLat = intent.getExtras().getDouble("spLat");
@@ -102,6 +102,15 @@ public class RoadActivity extends AppCompatActivity {
             }
         }); // KML파싱함수
 
+        tts2 = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                tts2.setPitch(1.0f); //1.5톤 올려서
+                tts2.setSpeechRate(1.2f); //1배속으로 읽기
+                tts2.setLanguage(Locale.KOREAN);
+            }
+        });
+
         lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         mLocationListener = new LocationListener() {
             int nodeCurrent = 0; // 알려주어야 할 노드가 무엇인지 알아봐야 하므로 알려주면 하나씩 증가
@@ -110,27 +119,31 @@ public class RoadActivity extends AppCompatActivity {
 
                     double longitude = location.getLongitude(); //경도
                     double latitude = location.getLatitude();   //위도
-                    Log.d("Campus","latitude: "+latitude+"\nlongitude: "+longitude);
+
+                    //Log.d("Campus","latitude: "+latitude+"\nlongitude: "+longitude);
 
                     tMapView.setLocationPoint(longitude, latitude);
                     tMapView.setCenterPoint(longitude, latitude, true);
 
+                    Log.d("Back button out", "path size is : " + path.size() + " path_coor is : " + path_coor.size() + " nodecurrent: " + nodeCurrent);
+
+
                     if(nodeCurrent==0){
-                        tts.speak("안녕하세요 이제부터 안내를 시작할게요."+path.get(nodeCurrent)+"하세요.",TextToSpeech.QUEUE_FLUSH,null);
-                        nodeCurrent++;
+                        tts2.speak("안내를 시작할게요."+path.get(nodeCurrent)+"하세요.",TextToSpeech.QUEUE_ADD,null,null);
                         Log.d("debug","nodeCurrent: "+nodeCurrent);
                         Log.d("debug",Integer.toString(path_coor.size()));
+                        nodeCurrent++;
                     }else if (2*nodeCurrent+2 < path_coor.size()) {
-                        Log.d("debug", "경도오차" + Double.toString(path_coor.get(2 * nodeCurrent) - longitude) + "// 위도오차" + Double.toString(path_coor.get(2 * nodeCurrent + 1) - latitude));
-                        if ((path_coor.get(2 * nodeCurrent) > longitude - 0.00006) && (path_coor.get(2 * nodeCurrent) < longitude + 0.00006) && ((path_coor.get(2 * nodeCurrent + 1) > latitude - 0.00006) && (path_coor.get(2 * nodeCurrent + 1) < latitude + 0.00006))) {
-                            tts.speak(path.get(nodeCurrent) + "하세요.", TextToSpeech.QUEUE_FLUSH, null);
-                            Log.d("debug", "Got it!");
+                        //Log.d("debug", "경도오차" + Double.toString(path_coor.get(2 * nodeCurrent) - longitude) + "// 위도오차" + Double.toString(path_coor.get(2 * nodeCurrent + 1) - latitude));
+                        if ((path_coor.get(2 * nodeCurrent) > longitude - 0.00008) && (path_coor.get(2 * nodeCurrent) < longitude + 0.00008) && ((path_coor.get(2 * nodeCurrent + 1) > latitude - 0.00008) && (path_coor.get(2 * nodeCurrent + 1) < latitude + 0.00008))) {
+                            tts2.speak(path.get(nodeCurrent) + "하세요.", TextToSpeech.QUEUE_FLUSH, null,null);
+                            //Log.d("debug", "Got it!");
                             Log.d("debug", "nodeCurrent: " + nodeCurrent);
                             nodeCurrent++;
                         }
                     }else if (2*nodeCurrent+2 == path_coor.size()){
-                        if ((path_coor.get(2 * nodeCurrent) > longitude - 0.00006) && (path_coor.get(2 * nodeCurrent) < longitude + 0.00006) && ((path_coor.get(2 * nodeCurrent + 1) > latitude - 0.00006) && (path_coor.get(2 * nodeCurrent + 1) < latitude + 0.00006))) {
-                            tts.speak(path.get(nodeCurrent) + "하셨어요. 안내를 종료할게요", TextToSpeech.QUEUE_FLUSH, null);
+                        if ((path_coor.get(2 * nodeCurrent) > longitude - 0.00008) && (path_coor.get(2 * nodeCurrent) < longitude + 0.00008) && ((path_coor.get(2 * nodeCurrent + 1) > latitude - 0.00008) && (path_coor.get(2 * nodeCurrent + 1) < latitude + 0.00008))) {
+                            tts2.speak(path.get(nodeCurrent) + "하셨어요. 안내를 종료할게요", TextToSpeech.QUEUE_FLUSH, null,null);
                             Log.d("debug", "Got it!");
                             Log.d("debug", "nodeCurrent: " + nodeCurrent);
                             nodeCurrent++;
@@ -153,7 +166,7 @@ public class RoadActivity extends AppCompatActivity {
 
             public void onStatusChanged(String provider, int status, Bundle extras) {
                 // 변경시
-                Log.d("test", "onStatusChanged, provider:" + provider + ", status:" + status + " ,Bundle:" + extras);
+                //Log.d("test", "onStatusChanged, provider:" + provider + ", status:" + status + " ,Bundle:" + extras);
             }
 
         };
@@ -187,19 +200,14 @@ public class RoadActivity extends AppCompatActivity {
         toast("현재위치" + Double.toString(location.getLongitude()) + "/" + Double.toString(location.getLatitude()));
 
         linearLayoutTmap.addView(tMapView);
-        tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
-            @Override
-            public void onInit(int status) {
-                tts.setPitch(1.0f); //1.5톤 올려서
-                tts.setSpeechRate(1.2f); //1배속으로 읽기
-                tts.setLanguage(Locale.KOREAN);
-            }
-        });
     }
     @Override
     public void onBackPressed() {
         Toast.makeText(this, "안내를 종료합니다", Toast.LENGTH_SHORT).show();
         lm.removeUpdates(mLocationListener);
+        path.clear();
+        path_coor.clear();
+        Log.d("Back button in","path size is : "+path.size()+"path_coor is : "+path_coor.size());
         super.onBackPressed();
     }
     /*
@@ -217,10 +225,10 @@ public class RoadActivity extends AppCompatActivity {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if(tts != null){
-            tts.stop();
-            tts.shutdown();
-            tts = null;
+        if(tts2 != null){
+            tts2.stop();
+            tts2.shutdown();
+            tts2 = null;
         }
     }
 

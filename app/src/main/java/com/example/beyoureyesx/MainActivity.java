@@ -262,9 +262,10 @@ public class MainActivity extends AppCompatActivity {
                 //블루투스
                 Geocoder geo = new Geocoder(MainActivity.this);
                 try{
-                    //List<Address> spLocation = geo.getFromLocationName(txtSP.getText().toString(),1);
-                    double spLat = location.getLatitude();// spLocation.get(0).getLatitude();
-                    double spLng = location.getLongitude();//spLocation.get(0).getLongitude();
+
+                    double spLat = location.getLatitude();
+                    double spLng = location.getLongitude();
+
                     //toast(Double.toString(spLat)+Double.toString(spLng));
 
                     List<Address> epLocation = geo.getFromLocationName(txtEP.getText().toString(),1);
@@ -282,7 +283,7 @@ public class MainActivity extends AppCompatActivity {
 
                         startActivity(intent);
                     }else{
-                        tts.speak("주소변환에 실패했어요. 다시시도해 주세요", TextToSpeech.QUEUE_FLUSH, null,null);
+                        tts.speak("주소변환에 실패했어요. 다시시도해 주세요", TextToSpeech.QUEUE_ADD, null,null);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -298,6 +299,7 @@ public class MainActivity extends AppCompatActivity {
             mConnectedTask.cancel(true);
         }
         if(tts != null){
+            toast("I'm gone!");
             tts.stop();
             tts.shutdown();
             tts = null;
