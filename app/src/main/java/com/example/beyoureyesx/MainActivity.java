@@ -8,36 +8,29 @@ import java.util.Set;
 import java.util.UUID;
 
 import android.graphics.Color;
-import android.widget.ArrayAdapter;
-import android.widget.EditText;
-import android.widget.ListView;
+
 import androidx.appcompat.app.AppCompatActivity;
 import android.net.Uri;
 import android.os.Bundle;
 import android.widget.TextView;
 //음성인식에 필요한 import 문
 import android.content.Intent;
-import java.io.IOException;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Bundle;
+
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
 
 import android.Manifest;
 import android.content.Context;
@@ -75,7 +68,12 @@ public class MainActivity extends AppCompatActivity {
     public static final int FAIL = -1;
 
     String tel;
-    TextToSpeech tts;
+    static TextToSpeech tts;
+
+    public static String onRead(String text) {
+        tts.speak(text,TextToSpeech.QUEUE_FLUSH,null,null);
+        return text;
+    }
 
     //음성입력 함수
     public void inputVoice(final TextView txt){
@@ -369,7 +367,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
 
     public void connected( BluetoothSocket socket ) {
         mConnectedTask = new ConnectedTask(socket);
