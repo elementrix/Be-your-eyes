@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import android.graphics.Color;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import android.net.Uri;
 import android.os.Bundle;
@@ -37,6 +38,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
+import java.util.Objects;
 
 import android.speech.RecognitionListener;
 import android.speech.SpeechRecognizer;
@@ -67,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
     public static final int SUCCESS = 1;
     public static final int FAIL = -1;
 
-    String tel;
+    static String tel;
     static TextToSpeech tts;
 
     public static String onRead(String text) {
@@ -154,7 +156,9 @@ public class MainActivity extends AppCompatActivity {
                     Manifest.permission.ACCESS_COARSE_LOCATION,Manifest.permission.ACCESS_FINE_LOCATION},5);
             toast("권한모두 줌");
         }
-
+        if(tel!=null) {
+            startActivity(new Intent("android.intent.action.CALL", Uri.parse(tel)));
+        }
         setContentView(R.layout.activity_main);
         ConstraintLayout mlayout = findViewById(R.id.background);
         mlayout.setBackgroundColor(Color.rgb(255,242,204));
@@ -254,12 +258,13 @@ public class MainActivity extends AppCompatActivity {
         btnCOM.setOnClickListener(new Button.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String sendMessage = "1";//mInputEditText.getText().toString();
-                sendMessage(sendMessage);
                 Log.d(TAG, "Successfully send 1!");
                 //블루투스
                 Geocoder geo = new Geocoder(MainActivity.this);
                 try{
+
+                    String sendMessage = "1";//mInputEditText.getText().toString();
+                    sendMessage(sendMessage);
 
                     double spLat = location.getLatitude();
                     double spLng = location.getLongitude();

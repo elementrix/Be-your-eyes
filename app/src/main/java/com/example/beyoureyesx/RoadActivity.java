@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
@@ -119,7 +120,7 @@ public class RoadActivity extends AppCompatActivity {
                     Intent intent = new Intent(getApplicationContext(),MainActivity.class);
 
                     if(nodeCurrent==0){
-                        intent = intent.setAction(MainActivity.onRead("지금부터 안내를 시작할게요." + path.get(nodeCurrent) + "하세요."));
+                        intent = intent.setAction(MainActivity.onRead("지금부터 안내를 시작할게요." + path.get(nodeCurrent) + "하세요. 직진이에요."));
                         intent.putExtra("msg","지금부터 안내를 시작할게요."+path.get(nodeCurrent)+"하세요.");
 
                         Log.d("debug","nodeCurrent: "+nodeCurrent);
@@ -128,7 +129,7 @@ public class RoadActivity extends AppCompatActivity {
 
                     }else if (2*nodeCurrent+2 < path_coor.size()) {
                         //Log.d("debug", "경도오차" + Double.toString(path_coor.get(2 * nodeCurrent) - longitude) + "// 위도오차" + Double.toString(path_coor.get(2 * nodeCurrent + 1) - latitude));
-                        if ((path_coor.get(2 * nodeCurrent) > longitude - 0.00008) && (path_coor.get(2 * nodeCurrent) < longitude + 0.00008) && ((path_coor.get(2 * nodeCurrent + 1) > latitude - 0.00008) && (path_coor.get(2 * nodeCurrent + 1) < latitude + 0.00008))) {
+                        if ((path_coor.get(2 * nodeCurrent) > longitude - 0.0001) && (path_coor.get(2 * nodeCurrent) < longitude + 0.0001) && ((path_coor.get(2 * nodeCurrent + 1) > latitude - 0.0001) && (path_coor.get(2 * nodeCurrent + 1) < latitude + 0.0001))) {
 
                             intent = intent.setAction(MainActivity.onRead(path.get(nodeCurrent) + "하세요."));
                             intent.putExtra("msg",path.get(nodeCurrent) + "하세요.");
@@ -138,17 +139,18 @@ public class RoadActivity extends AppCompatActivity {
                             nodeCurrent++;
                         }
                     }else if (2*nodeCurrent+2 == path_coor.size()){
-                        if ((path_coor.get(2 * nodeCurrent) > longitude - 0.00008) && (path_coor.get(2 * nodeCurrent) < longitude + 0.00008) && ((path_coor.get(2 * nodeCurrent + 1) > latitude - 0.00008) && (path_coor.get(2 * nodeCurrent + 1) < latitude + 0.00008))) {
+                        if ((path_coor.get(2 * nodeCurrent) > longitude - 0.0001) && (path_coor.get(2 * nodeCurrent) < longitude + 0.0001) && ((path_coor.get(2 * nodeCurrent + 1) > latitude - 0.0001) && (path_coor.get(2 * nodeCurrent + 1) < latitude + 0.0001))) {
 
-                            intent = intent.setAction(MainActivity.onRead(path.get(nodeCurrent) + "하셨어요. 안내를 종료할게요"));
-                            intent.putExtra("msg",path.get(nodeCurrent) + "하셨어요. 안내를 종료할게요");
+                            intent = intent.setAction(MainActivity.onRead(path.get(nodeCurrent) + "하셨어요. 안내를 종료할게요. 보호자에게 전화할까요?"));
+                            intent.putExtra("msg",path.get(nodeCurrent) + "하셨어요. 안내를 종료할게요. 보호자에게 전화할까요?");
 
                             Log.d("debug", "Got it!");
                             Log.d("debug", "nodeCurrent: " + nodeCurrent);
                             nodeCurrent++;
                         }
                     }else if(2*nodeCurrent+2 > path_coor.size()){
-                        toast("Turn off listener");
+                        toast("메인화면으로 돌아갑니다.");
+                        startActivity(intent);
                         lm.removeUpdates(this);
                     }
                 }
