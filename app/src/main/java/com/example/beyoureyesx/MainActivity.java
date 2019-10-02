@@ -55,6 +55,11 @@ import androidx.core.content.ContextCompat;
 
 public class MainActivity extends AppCompatActivity {
 
+    double spLat=0.0;
+    double spLng=0.0;
+    double epLat=0.0;
+    double epLng=0.0;
+
     //블루투스
     private final int REQUEST_BLUETOOTH_ENABLE = 100;
     private final int REQUEST_CONTACT_ENABLE = 10001;
@@ -266,8 +271,8 @@ public class MainActivity extends AppCompatActivity {
                     String sendMessage = "1";//mInputEditText.getText().toString();
                     sendMessage(sendMessage);
 
-                    double spLat = location.getLatitude();
-                    double spLng = location.getLongitude();
+                    spLat = location.getLatitude();
+                    spLng = location.getLongitude();
 
                     //toast(Double.toString(spLat)+Double.toString(spLng));
 
@@ -275,8 +280,8 @@ public class MainActivity extends AppCompatActivity {
                     //toast(Double.toString(epLat)+Double.toString(epLng));
                     //toast("주소변환값"+":"+spLat);
                     if(epLocation.size()>0) {
-                        double epLat = epLocation.get(0).getLatitude();
-                        double epLng = epLocation.get(0).getLongitude();
+                        epLat = epLocation.get(0).getLatitude();
+                        epLng = epLocation.get(0).getLongitude();
 
                         Intent intent = new Intent(getApplicationContext(), RoadActivity.class);
                         intent.putExtra("spLat", spLat);
@@ -284,7 +289,15 @@ public class MainActivity extends AppCompatActivity {
                         intent.putExtra("epLat", epLat);
                         intent.putExtra("epLng", epLng);
 
+                        Log.d("After Back button pressed and research: ","spLat sended like : "+spLat);
                         startActivity(intent);
+                        spLat=0.0;
+                        spLng=0.0;
+                        epLat=0.0;
+                        epLng=0.0;
+
+                        Log.d("After Back button pressed and research: ","spLat changed to : "+spLat);
+
                     }else{
                         tts.speak("주소변환에 실패했어요. 다시시도해 주세요", TextToSpeech.QUEUE_ADD, null,null);
                     }

@@ -37,20 +37,25 @@ public class RoadActivity extends AppCompatActivity {
     ArrayList<String> path = new ArrayList<>();
     ArrayList<Double> path_coor = new ArrayList<>();
 
+    double spLat;
+    double spLng;
+    double epLat;
+    double epLng;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_road);
         boolean isOnTrack = true;
 
-        Intent intent = getIntent();
-        double spLat = intent.getExtras().getDouble("spLat");
-        double spLng = intent.getExtras().getDouble("spLng");
-        double epLat = intent.getExtras().getDouble("epLat");
-        double epLng = intent.getExtras().getDouble("epLng");
-
         final TMapView tMapView = new TMapView(this);
         tMapView.setSKTMapApiKey("5d39a358-e7e5-4f76-9b91-a6de462b5042");
+
+        Intent intent = getIntent();
+        spLat = intent.getExtras().getDouble("spLat");
+        spLng = intent.getExtras().getDouble("spLng");
+        epLat = intent.getExtras().getDouble("epLat");
+        epLng = intent.getExtras().getDouble("epLng");
 
         LinearLayout linearLayoutTmap = (LinearLayout) findViewById(R.id.linearLayoutTmap);
         TMapData tmapdata = new TMapData();//경로 데이터를 저장하기 위한 변수
@@ -120,13 +125,17 @@ public class RoadActivity extends AppCompatActivity {
                     Intent intent = new Intent(getApplicationContext(),MainActivity.class);
 
                     if(nodeCurrent==0){
-                        intent = intent.setAction(MainActivity.onRead("지금부터 안내를 시작할게요." + path.get(nodeCurrent) + "하세요. 직진이에요."));
-                        intent.putExtra("msg","지금부터 안내를 시작할게요."+path.get(nodeCurrent)+"하세요.");
+                        //while(path)
+                        if(path.size()>0 && path_coor.size()>0){
+                            intent = intent.setAction(MainActivity.onRead("지금부터 안내를 시작할게요." + path.get(nodeCurrent) + "하세요. 직진이에요."));
+                            intent.putExtra("msg","지금부터 안내를 시작할게요."+path.get(nodeCurrent)+"하세요.");
 
-                        Log.d("debug","nodeCurrent: "+nodeCurrent);
-                        Log.d("debug",Integer.toString(path_coor.size()));
-                        nodeCurrent++;
-
+                            Log.d("debug","nodeCurrent: "+nodeCurrent);
+                            Log.d("debug",Integer.toString(path_coor.size()));
+                            nodeCurrent++;
+                        }else{
+                            Log.d("back step required: ","path is 0 & path_coor is 0");
+                        }
                     }else if (2*nodeCurrent+2 < path_coor.size()) {
                         //Log.d("debug", "경도오차" + Double.toString(path_coor.get(2 * nodeCurrent) - longitude) + "// 위도오차" + Double.toString(path_coor.get(2 * nodeCurrent + 1) - latitude));
                         if ((path_coor.get(2 * nodeCurrent) > longitude - 0.0001) && (path_coor.get(2 * nodeCurrent) < longitude + 0.0001) && ((path_coor.get(2 * nodeCurrent + 1) > latitude - 0.0001) && (path_coor.get(2 * nodeCurrent + 1) < latitude + 0.0001))) {
@@ -208,6 +217,10 @@ public class RoadActivity extends AppCompatActivity {
         lm.removeUpdates(mLocationListener);
         path.clear();
         path_coor.clear();
+        spLat = 0;
+        spLng = 0;
+        epLat = 0;
+        epLng = 0;
         Log.d("Back button in","path size is : "+path.size()+"path_coor is : "+path_coor.size());
         super.onBackPressed();
     }
@@ -226,7 +239,15 @@ public class RoadActivity extends AppCompatActivity {
     @Override
     public void onDestroy() {
         super.onDestroy();
-
+        lm.removeUpdates(mLocationListener);
+        path.clear();
+        path_coor.clear();
+        spLat = 0;
+        spLng = 0;
+        epLat = 0;
+        epLng = 0;
+        Log.d("Back button in","I'm destroyed");
+        Log.d("Back button in","path size is : "+path.size()+"path_coor is : "+path_coor.size());
     }
 
 }
